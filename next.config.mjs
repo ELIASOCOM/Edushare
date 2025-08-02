@@ -7,14 +7,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['placeholder.svg'],
-    unoptimized: true
+    unoptimized: true,
   },
-  output: 'standalone',
-  trailingSlash: true,
-  experimental: {
-    optimizePackageImports: ['lucide-react']
-  }
 }
 
 export default nextConfig

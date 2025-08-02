@@ -1,89 +1,103 @@
-import type { Metadata } from "next"
-import { Header } from "@/components/header"
-import { FileManager } from "@/components/file-manager"
-import { Footer } from "@/components/footer"
+"use client"
 
-export const metadata: Metadata = {
-  title: "EduHub - Educational Resources Platform | Free Learning Materials",
-  description:
-    "Discover, preview, and download high-quality educational materials curated for students and educators. Access thousands of resources across Mathematics, Science, Literature, and more.",
-  keywords:
-    "education, learning resources, educational materials, study guides, academic resources, free education, online learning, student resources, teacher materials",
-  authors: [{ name: "EduHub Team" }],
-  creator: "EduHub",
-  publisher: "EduHub",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL("https://eduhub.vercel.app"),
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    title: "EduHub - Educational Resources Platform",
-    description:
-      "Discover, preview, and download high-quality educational materials curated for students and educators",
-    url: "https://eduhub.vercel.app",
-    siteName: "EduHub",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "EduHub - Educational Resources Platform",
-      },
-    ],
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "EduHub - Educational Resources Platform",
-    description:
-      "Discover, preview, and download high-quality educational materials curated for students and educators",
-    images: ["/og-image.jpg"],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-}
+import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
+import AuthForm from "@/components/auth-form"
+import Dashboard from "@/components/dashboard"
+import AuthDebug from "@/components/auth-debug"
+import { Loader2, Sparkles, BookOpen, Users, Heart } from "lucide-react"
 
 export default function Home() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-12 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-              />
-            </svg>
+  const [session, setSession] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Get initial session
+    const getSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      setSession(session)
+      setLoading(false)
+    }
+
+    getSession()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session)
+      setSession(session)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Sparkles className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent dark:from-white dark:via-blue-200 dark:to-purple-200 mb-4">
-            Educational Resources Hub
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Discover, preview, and download high-quality educational materials curated for students and educators
-          </p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
+          <p className="text-purple-600 mt-2 font-medium">Loading EduResources...</p>
         </div>
-        <FileManager />
-      </main>
-      <Footer />
+      </div>
+    )
+  }
+
+  if (session) {
+    return <Dashboard />
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
+        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16 relative z-10">
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl">
+              <BookOpen className="w-10 h-10 text-white" />
+            </div>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            EduResources
+          </h1>
+          <p className="text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Share, discover, and access thousands of educational PDFs with our vibrant learning community
+          </p>
+
+          {/* Feature highlights */}
+          <div className="flex flex-wrap justify-center gap-6 mb-12">
+            <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-blue-200/50 shadow-lg">
+              <Users className="w-5 h-5 text-blue-500" />
+              <span className="text-slate-700 font-medium">Global Community</span>
+            </div>
+            <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-purple-200/50 shadow-lg">
+              <Sparkles className="w-5 h-5 text-purple-500" />
+              <span className="text-slate-700 font-medium">Premium Quality</span>
+            </div>
+            <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-pink-200/50 shadow-lg">
+              <Heart className="w-5 h-5 text-pink-500" />
+              <span className="text-slate-700 font-medium">Always Free</span>
+            </div>
+          </div>
+        </div>
+
+        <AuthForm />
+      </div>
+      <AuthDebug />
     </div>
   )
 }
